@@ -6,7 +6,7 @@ type Entry = { type: "in" | "out"; text: string };
 const USER_FLAG = "flag{user_cool_nerd_lokajith_7f3a9e2c}";
 const ROOT_FLAG = "flag{root_vibe_coded_arch_masta_9b2c1f8a}";
 
-const FS: Record<string, string> = {
+let FS: Record<string, string> = {
   "projects/gilma": `gilma — file sync — 4 variants
   repos: gilma, gilmaclientside, rustygilma, gilmacpp
   stack: Rust, C++17 · delta sync · SHA-256 · raw TCP sockets`,
@@ -27,8 +27,9 @@ const FS: Record<string, string> = {
 ${USER_FLAG}
 
 — lokajith
-hint: root flag is somewhere nearby but u need to be root to read it. try to find privesc. for now: cat root.txt`,
+hint: root flag at /root/root.txt — try 'id', 'sudo -l' — cargo is sus`,
   "root.txt": ROOT_FLAG,
+  "/root/root.txt": ROOT_FLAG,
   "/etc/os-release": `NAME="Arch Linux"
 PRETTY_NAME="Arch Linux"
 ID=arch
@@ -49,7 +50,8 @@ const HELP = `arch terminal — all commands actually work:
   cat <file>        cat README.md, cat user.txt, cat /etc/os-release
   grep <pat> [file] grep rust, grep flag user.txt
   find <path> -name <f>   find . -name user.txt
-  sudo <cmd>        sudo cat root.txt (privesc coming soon)
+  sudo -l           check sudo perms (cargo is sus)
+  sudo <cmd>        sudo cat root.txt — try cargo privesc
   id                show uid/gid
 
   ─ arch / system ─
@@ -81,15 +83,28 @@ const HELP = `arch terminal — all commands actually work:
 
   ─ dev ─
   rustc --version   rust version
-  cargo --version   cargo version
+  cargo --version   cargo version (try: cargo new pwn; sudo cargo run)
+  cargo new <name>  create rust project (for privesc)
   git <arg>         git status, git log --oneline
   curl <url>        curl example.com
   ping <host>       ping archlinux.org
-  echo <text>       echo hello`;
+  echo <text> > <file>  echo hello > /tmp/x
+  mkdir <dir>       mkdir pwn`;
 
 function runCmd(input: string, hist: string[]): string[] {
   const raw = input.trim();
   if (!raw) return [];
+
+  // handle echo with redirection: echo "foo" > file
+  if (raw.startsWith("echo ") && raw.includes(" > ")) {
+    const [left, file] = raw.split(" > ").map((s) => s.trim());
+    const text = left.slice(5).trim().replace(/^["']|["']$/g, "");
+    const target = file.split(" ")[0];
+    FS[target] = text;
+    FS[target.replace(/^\.\//, "")] = text;
+    return [];
+  }
+
   const [cmd, ...args] = raw.split(/\s+/);
 
   if (raw.includes("|")) {
@@ -145,8 +160,40 @@ function runCmd(input: string, hist: string[]): string[] {
     case "sudo": {
       const sub = args.join(" ");
       if (!sub) return ["sudo: missing command"];
-      if (sub === "cat root.txt" || sub === "cat /root/root.txt" || sub === "cat ./root.txt") {
-        return ["sudo: lokajith is not in the sudoers file. This incident will be reported. — vuln not yet planted, come back soon. root vuln coming later."];
+      if (sub === "-l" || sub === "-ll") {
+        return [
+          "Matching Defaults entries for lokajith on arch:",
+          "    env_reset, mail_badpass, secure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/bin",
+          "",
+          "User lokajith may run the following commands on arch:",
+          "    (ALL) NOPASSWD: /usr/bin/cargo",
+          "    (ALL) NOPASSWD: /usr/bin/journalctl",
+          "",
+          "hint: cargo is GTFOBins — try 'cargo new pwn' then 'sudo cargo run' or check https://gtfobins.github.io/gtfobins/cargo/",
+        ];
+      }
+      if (sub === "cat root.txt" || sub === "cat /root/root.txt" || sub === "cat ./root.txt" || sub === "cat /root/root.txt") {
+        return ["sudo: lokajith is not in the sudoers file for cat. Only cargo is allowed — try cargo privesc."];
+      }
+      if (sub.startsWith("cargo")) {
+        // cargo GTFOBins privesc: sudo cargo run/build with build.rs execution as root
+        const cargoArgs = sub.slice(5).trim();
+        if (cargoArgs.includes("run") || cargoArgs.includes("build") || cargoArgs === "" || cargoArgs.includes("--manifest-path")) {
+          return [
+            "   Compiling pwn v0.1.0 (/home/lokajith/pwn)",
+            "    Finished `dev` profile [unoptimized] target(s) in 0.42s",
+            "     Running `target/debug/pwn` as root...",
+            `uid=0(root) gid=0(root) groups=0(root)`,
+            `cat /root/root.txt:`,
+            ROOT_FLAG,
+            "",
+            "— nice. you pwned cargo. send this flag to lokajith, he owes you nothing but respect.",
+          ];
+        }
+        if (cargoArgs.includes("--help") || cargoArgs.includes("-h")) {
+          return ["cargo GTFOBins: sudo cargo run --manifest-path pwn/Cargo.toml — build.rs runs as root"];
+        }
+        return runCmd("cargo " + cargoArgs, hist);
       }
       if (sub.startsWith("cat ")) {
         const f = sub.slice(4).trim();
@@ -157,7 +204,7 @@ function runCmd(input: string, hist: string[]): string[] {
       if (sub.startsWith("journalctl") || sub.startsWith("systemctl") || sub.startsWith("pacman") || sub.startsWith("ip") || sub.startsWith("iwctl")) {
         return runCmd(sub, hist);
       }
-      return [`sudo: unable to execute '${sub}': vuln not planted yet`];
+      return [`sudo: sorry, user lokajith is not allowed to execute '${sub}' as root on arch. allowed: /usr/bin/cargo`];
     }
     case "id":
       return ["uid=1000(lokajith) gid=1000(lokajith) groups=1000(lokajith),10(wheel) — not root"];
@@ -312,9 +359,35 @@ function runCmd(input: string, hist: string[]): string[] {
     case "rustc":
       if (args[0] === "--version") return ["rustc 1.85.0 (stable) — backend · arch btw"];
       return ["rustc: try 'rustc --version'"];
-    case "cargo":
-      if (args[0] === "--version") return ["cargo 1.85.0"];
-      return ["cargo: try 'cargo --version'"];
+    case "mkdir": {
+      const p = args[0];
+      if (!p) return ["mkdir: missing operand"];
+      FS[p] = "";
+      FS[p + "/"] = "";
+      return [];
+    }
+    case "touch": {
+      const p = args[0];
+      if (!p) return ["touch: missing file operand"];
+      if (!FS[p]) FS[p] = "";
+      return [];
+    }
+    case "cargo": {
+      const sub = args.join(" ").trim();
+      if (sub === "--version" || sub === "-V") return ["cargo 1.85.0"];
+      if (sub.startsWith("new ")) {
+        const name = sub.slice(4).trim().split(" ")[0] || "pwn";
+        FS[`${name}/Cargo.toml`] = `[package]\nname = "${name}"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]`;
+        FS[`${name}/src/main.rs`] = `fn main(){println!("hello from ${name}");}`;
+        FS[`${name}`] = `Cargo.toml  src/`;
+        return [`     Created binary (application) \`${name}\` package`];
+      }
+      if (sub === "run" || sub.startsWith("run ") || sub === "build" || sub.startsWith("build ")) {
+        return ["   Compiling pwn v0.1.0\n    Finished `dev` profile [unoptimized]\n     Running `target/debug/pwn`\nhello from pwn — try 'sudo cargo run' for root"];
+      }
+      if (sub.includes("--help") || sub === "help") return ["cargo GTFOBins: cargo new pwn; sudo cargo run — build.rs runs as root. also try 'sudo -l'"];
+      return ["cargo: try 'cargo --version', 'cargo new pwn', 'cargo run', 'sudo cargo run' (privesc)"];
+    }
     case "neofetch": {
       return [
         `                   -\\` + "                 .o+`",
