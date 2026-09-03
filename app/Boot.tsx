@@ -98,7 +98,7 @@ export default function Boot() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[10px] tracking-widest text-zinc-600">loading portfolio · i3 + rust + linux</p>
+        <p className="mt-6 text-center text-[10px] tracking-widest text-zinc-600">loading portfolio · niri + rust + linux</p>
       </div>
     </div>
   );

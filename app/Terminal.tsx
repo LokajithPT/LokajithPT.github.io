@@ -26,7 +26,7 @@ const initialFS: Record<string, FSEntry> = {
   "/home/lokajith": { type: "dir" },
   "/home/lokajith/README.md": {
     type: "file",
-    content: `LokajithPT — backend dev in rust · arch linux · i3\nprojects: gilma (4 variants), knotApp, lkey, leviathan\ntip: type 'help' for commands`,
+    content: `LokajithPT — backend dev in rust · arch linux · niri\nprojects: gilma (4 variants), knotApp, lkey, leviathan\ntip: type 'help' for commands`,
   },
   "/home/lokajith/user.txt": {
     type: "file",
@@ -65,6 +65,88 @@ const initialFS: Record<string, FSEntry> = {
   "/root/root.txt": { type: "file", content: ROOT_FLAG, owner: "root", perms: "600" },
   "/tmp": { type: "dir" },
 };
+
+const FORTUNES = [
+  "You will debug a bug by adding a console.log and the bug will disappear.",
+  "Never trust a user who types rm -rf / — they know what they did.",
+  "There are 10 types of people: those who understand binary and those who don't.",
+  "btw i use arch — and so should you.",
+  "Your code works on the first try. Just kidding, segfault.",
+  "A CTF player walks into a bar and orders 'cat flag.txt' — bartender says 'permission denied'.",
+  "cargo build succeeds on the 17th try — it's not a bug, it's a feature.",
+  "Real programmers count from 0. Everyone else is off by one.",
+  "Keep calm and sudo -l",
+  "The best documentation is the code. The worst documentation is also the code.",
+  "You are not stuck, you are just in vim and forgot how to :q",
+  "Arch users don't say 'my OS', they whisper 'btw...'",
+];
+
+const SL_TRAIN = [
+  "      ====        ________                ___________ ",
+  "  _D _|  |_______/        \\__I_I_____===__|_________|",
+  "   |(_)---  |   H\\________/ |   |        =|___ ___|      _________________ ",
+  "   /     |  |   H  |  |     |   |         ||_| |_||     _|                 \\",
+  "  |      |  |   H  |__--------------------| [___] |   =|                    |",
+  "  | ________|___H__/__|_____/[][]~\\_______|       |   -|                    |",
+  "  |/ |   |-----------I_____I [][] []  D   |=======|____|________________|__ |",
+  " __/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__\\__________________________|",
+  "  |/-=|___||    ||    ||    |/~~\\_\\_|______________|_\\__________________________|",
+  "   \\_/      \\O=====O=====O=====O_/ \\_/ \\_/         \\_/ \\_/",
+  "                ~~~ steam locomotive has arrived ~~~",
+];
+
+const MAN_LOKAJITH = `LOKAJITH(1)                  User Commands                 LOKAJITH(1)
+
+NAME
+       lokajith - backend dev who makes questionable decisions
+
+SYNOPSIS
+       lokajith [--backend] [--arch] [--rust] [--send-flags]
+
+DESCRIPTION
+       Full-stack developer who pretends to be backend.
+       Builds in Rust, runs Arch (btw i use arch), tiles with niri.
+       Has 4 variants of the same file sync project (gilma).
+       Still mass-DMs people on LinkedIn for internships(?).
+
+OPTIONS
+       --backend     Pretend frontend doesn't exist
+       --arch        Remind everyone you use Arch (default: on)
+       --rust        Rewrite it in Rust (always)
+       --ctf         Try the terminal above. Find user.txt. Get root.
+
+PROJECTS
+       gilma(1)      file sync, 4 variants, raw TCP, no frameworks
+       knotApp(1)    knowledge graph that actually links
+       lkey(1)       readable language: var name is "Alice"
+       leviathan(1)  modular workspace with too many languages
+
+BUGS
+       Too many side projects. Forgets to commit.
+       Pushes to prod on Friday night. Blames systemd.
+       Report bugs to: lokajith@arch (or open an issue, nerd)
+
+AUTHOR
+       Written by a nerd who built this terminal instead of LeetCode.
+       See also: rustc(1), cargo(1), vim(1), arch(5)
+
+LOKAJITH 1.85.0               2026-09-03                  LOKAJITH(1)`;
+
+const KERNEL_PANIC_LINES = [
+  "Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)",
+  "CPU: 0 PID: 1 Comm: rm Not tainted 6.10.3-arch1-1 #1",
+  "Hardware name: QEMU Standard PC (i440FX + PIIX, 1996)",
+  "Call Trace:",
+  " <TASK>",
+  "  dump_stack+0x8f/0xd0",
+  "  panic+0x12e/0x2f3",
+  "  mount_block_root+0x1a2/0x2a0",
+  "  prepare_namespace+0x132/0x170",
+  "  kernel_init+0x12a/0x130",
+  "  ret_from_fork+0x22/0x30",
+  " </TASK>",
+  "---[ end Kernel panic - not syncing ]---",
+];
 
 const HELP = `arch terminal — all commands actually work (stateful cwd, real fs):
 
@@ -149,12 +231,30 @@ export default function Terminal() {
   const [cwd, setCwd] = useState("/home/lokajith");
   const [fs, setFs] = useState<Record<string, FSEntry>>(() => ({ ...initialFS }));
   const [pager, setPager] = useState<null | { asRoot: boolean; src: string; file?: string }>(null);
+  const [nuked, setNuked] = useState(false);
+  const [shaking, setShaking] = useState(false);
+  const [corrupt, setCorrupt] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [history, pager]);
+
+  useEffect(() => {
+    const onReboot = () => {
+      setNuked(false);
+      setCorrupt(false);
+      setShaking(false);
+      setHistory([{ type: "out", text: "rebooting... arch terminal — ctf mode — type 'ls' to start" }]);
+      setCwd("/home/lokajith");
+      setFs({ ...initialFS });
+      document.documentElement.classList.remove("nuked");
+      document.body.style.overflow = "";
+    };
+    window.addEventListener("rmrf-reboot", onReboot as EventListener);
+    return () => window.removeEventListener("rmrf-reboot", onReboot as EventListener);
+  }, []);
 
   const listDir = (dir: string): string[] => {
     const prefix = dir === "/" ? "/" : dir + "/";
@@ -218,6 +318,15 @@ export default function Terminal() {
   const runCmd = (rawInput: string, hist: string[]): string[] => {
     const raw = rawInput.trim();
     if (!raw) return [];
+    if (nuked || corrupt) {
+      const garble = ["�", "�", "�", "�", "�"];
+      const r = garble[Math.floor(Math.random() * garble.length)];
+      const cmds = ["ls", "cat", "pwd", "whoami", "id", "clear"];
+      if (cmds.includes(raw.split(/\s+/)[0])) {
+        return [`${r}${r}${r} I/O error: cannot read ${r}${r}${r}`, `EXT4-fs error: unable to read inode`, `${r} filesystem corrupted ${r}`];
+      }
+      return [`${r} ${raw}: Input/output error`, `bash: cannot execute: ${r}${r}${r}`];
+    }
 
     if (raw.startsWith("echo ") && raw.includes(" >")) {
       const isAppend = raw.includes(" >> ");
@@ -456,6 +565,7 @@ export default function Terminal() {
       case "sudo": {
         const sub = args.join(" ");
         if (!sub) return ["sudo: missing command"];
+        if (sub === "make me a sandwich" || sub === "make me a sandwich.") return ["Okay."];
         if (sub === "-l" || sub === "-ll") {
           return [
             "Matching Defaults entries for lokajith on arch:",
@@ -500,7 +610,7 @@ export default function Terminal() {
         return ["lokajith"];
       case "env":
       case "printenv":
-        return ["SHELL=/bin/zsh", "USER=lokajith", "HOME=/home/lokajith", "TERM=xterm-256color", "EDITOR=nvim", "ARCH=btw i use arch", `PWD=${cwd}`];
+        return ["SHELL=/bin/fish", "USER=lokajith", "HOME=/home/lokajith", "TERM=xterm-256color", "EDITOR=nvim", "ARCH=btw i use arch", `PWD=${cwd}`];
       case "history":
         return hist.length ? hist.map((h, i) => `  ${i + 1}  ${h}`) : ["(no history yet)"];
       case "find": {
@@ -538,14 +648,26 @@ export default function Terminal() {
       }
       case "journalctl": {
         const flag = args.join(" ");
-        if (flag.includes("-b") || flag === "" || flag === "--no-pager") {
+        if (flag.includes("-b") || flag === "" || flag === "--no-pager" || flag.includes("-f") || flag.includes("--follow")) {
           return [
             "-- Logs begin at Wed 2026-09-03 09:16:01 IST --",
-            "Sep 03 09:16:01 arch kernel: Linux version 6.10.3-arch1-1",
+            "Sep 03 09:16:01 arch kernel: Linux version 6.10.3-arch1-1 (arch@build)",
             "Sep 03 09:16:05 arch lokajith[1000]: started portfolio terminal — ctf ready",
+            "Sep 03 09:17:12 arch cargo[42069]: building regret... this is taking too long",
+            "Sep 03 09:18:33 arch systemd[1]: frontend.service: Main process exited, code=killed, status=9/KILL",
+            "Sep 03 09:18:33 arch systemd[1]: frontend.service: Failed with result 'signal'.",
+            "Sep 03 09:18:34 arch systemd[1]: frontend.service: Scheduled restart job, restart counter is at 42.",
+            "Sep 03 09:19:01 arch fish[1337]: dev@prod: why is this working (and why is prod on fire)",
+            "Sep 03 09:19:44 arch lokajith[1000]: mass-DMed everyone on LinkedIn — no regrets",
+            "Sep 03 09:20:02 arch kernel: [UFW BLOCK] IN=wlan0 OUT= MAC= SRC=1.1.1.1 DST=192.168.1.42",
+            "Sep 03 09:21:17 arch rustc[1337]: warning: unused variable `motivation` — consider prefixing with _",
+            "Sep 03 09:22:00 arch vim[2048]: hjkl hjkl hjkl — user forgot how to exit vim again",
           ];
         }
-        return ["journalctl: try 'journalctl -b' or 'journalctl --no-pager'"];
+        if (flag.includes("-k") || flag.includes("--dmesg")) {
+          return ["[    0.000000] Linux version 6.10.3-arch1-1", "[    2.102938] wlan0: associated", "[  666.000000] lokajith: btw i use arch btw"];
+        }
+        return ["journalctl: try 'journalctl -b', 'journalctl -f', or 'journalctl --no-pager'"];
       }
       case "systemctl": {
         const sub = args.join(" ");
@@ -584,10 +706,10 @@ export default function Terminal() {
       case "free":
         return ["               total   used   free\nMem:           16Gi   3.2Gi  11Gi\nSwap:         8.0Gi     0B   8.0Gi"];
       case "ps":
-        return ["PID TTY  TIME CMD\n 420 ?  00:00:00 iwd\n1337 pts/0 00:00:00 zsh"];
+        return ["PID TTY  TIME CMD\n 420 ?  00:00:00 iwd\n1337 pts/0 00:00:00 fish"];
       case "htop":
       case "top":
-        return ["htop — Tasks: 142, Load avg: 0.42\n 1337 lokajith 2.1% zsh\n  666 lokajith 5.4% rust-analyzer"];
+        return ["htop — Tasks: 142, Load avg: 0.42\n 1337 lokajith 2.1% fish\n  666 lokajith 5.4% rust-analyzer"];
       case "lspci":
         return ["00:00.0 Host bridge: Intel\n00:02.0 VGA: Intel Iris Xe"];
       case "lsusb":
@@ -660,25 +782,96 @@ export default function Terminal() {
       }
       case "cowsay": {
         const msg = args.join(" ") || "btw i use arch";
-        return [` < ${msg} >`, "  \\   ^__^", "   \\  (oo)\\_______"];
+        return [` < ${msg} >`, "  \\   ^__^", "   \\  (oo)\\_______", "       (__)\\       )\\/\\", "           ||----w |", "           ||     ||"];
       }
+      case "sl": {
+        return SL_TRAIN;
+      }
+      case "fortune": {
+        const pick = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+        return [`  ┌─ fortune ─────────────────────┐`, `  │ ${pick}`, `  └─────────────────────────────────┘`];
+      }
+      case "matrix":
+      case "cmatrix": {
+        return [
+          "  010101010101010101010101010101010101010101010101010101",
+          "  ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾋｱﾎﾃﾏｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ 0101010110101010",
+          "  010110100101010101010110101010010101010101010101010101",
+          "  wake up, lokajith... the matrix has you.",
+          "  follow the white rabbit. knock, knock.",
+        ];
+      }
+      case "yes": {
+        return [Array(60).fill("y").join(" ") + " — (truncated, press ctrl+c to stop. joking, you can't.)"];
+      }
+      case "date": {
+        return ["Thu Sep 03 09:16:01 IST 2026 — and you're still reading this? go touch grass (or cat user.txt)"];
+      }
+      case "cal": {
+        return ["   September 2026", "Su Mo Tu We Th Fr Sa", "       1  2  3  4  5", " 6  7  8  9 10 11 12", "13 14 15 16 17 18 19", "20 21 22 23 24 25 26", "27 28 29 30", "", "today is Sep 03 — great day to pwn this box"];
+      }
+      case "whois": {
+        return ["whois: try 'whois lokajith' — he's the guy who uses arch btw"];
+      }
+      case "man": {
+        const target = (args[0] || "").toLowerCase();
+        if (target === "lokajith" || target === "lokajithpt" || target === "loka") return MAN_LOKAJITH.split("\n");
+        if (target === "arch") return ["NAME arch - the best distro", "DESCRIPTION btw i use arch", "SEE ALSO lokajith(1)"];
+        if (target === "vim") return ["VIM(1) — Vi IMproved", "SYNOPSIS vim [file]", "BUGS you will never exit. try :q!"];
+        return [`No manual entry for ${target || "(null)"} — try 'man lokajith'`];
+      }
+      case "arch":
+        return ["btw i use arch"];
       case "env":
       case "printenv":
-        return ["SHELL=/bin/zsh", `PWD=${cwd}`, "USER=lokajith", "HOME=/home/lokajith", "ARCH=btw i use arch"];
-      default:
-        return [`zsh: command not found: ${cmd} — type 'help'`];
+        return ["SHELL=/bin/fish", `PWD=${cwd}`, "USER=lokajith", "HOME=/home/lokajith", "ARCH=btw i use arch"];
+      default: {
+        // xkcd sandwich easter egg needs full raw check
+        if (raw === "make me a sandwich" || raw === "make me a sandwich.") return ["What? Make it yourself."];
+        return [`fish: Unknown command: ${cmd} — type 'help'`];
+      }
     }
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 pt-4">
-      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-black shadow-2xl">
+    <div className={`mx-auto w-full max-w-6xl px-6 pt-4 ${shaking ? "animate-[shake_0.12s_ease-in-out_infinite]" : ""}`}>
+      <style>{`@keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}100%{transform:translate(1px,2px)}} @keyframes flicker{0%,100%{opacity:1}50%{opacity:0.85}}`}</style>
+      <div className={`overflow-hidden rounded-2xl border bg-black shadow-2xl relative ${corrupt ? "border-red-900/60" : "border-zinc-800"} ${shaking ? "border-red-800" : ""}`} style={corrupt ? { filter: "contrast(1.2) hue-rotate(2deg)" } : undefined}>
+        {nuked && (
+          <div className="absolute inset-0 z-20 flex flex-col bg-black/95 p-4 font-mono text-xs leading-5">
+            <div className="flex-1 overflow-y-auto text-red-400" style={{ animation: "flicker 0.15s infinite" }}>
+              {KERNEL_PANIC_LINES.map((l, i) => (
+                <div key={i} className={i === 0 ? "text-red-500 font-bold" : ""}>{l}</div>
+              ))}
+              <div className="mt-4 text-zinc-300">you just <span className="text-red-400 font-bold">rm -rf /</span> — what did you expect?</div>
+              <div className="mt-2 text-zinc-500">filesystem: <span className="text-red-400">corrupted</span> · inode table: <span className="text-red-400">gone</span> · your files: <span className="text-red-400">also gone</span> (joking, refresh to reboot)</div>
+              <div className="mt-2 text-zinc-400">pro tip: maybe don&apos;t delete root next time, nerd.</div>
+            </div>
+            <button
+              onClick={() => {
+                setNuked(false);
+                setCorrupt(false);
+                setShaking(false);
+                setHistory([{ type: "out", text: "rebooting... arch terminal — ctf mode — type 'ls' to start" }]);
+                setCwd("/home/lokajith");
+                setFs({ ...initialFS });
+                document.documentElement.classList.remove("nuked");
+                document.body.style.overflow = "";
+                window.dispatchEvent(new CustomEvent("rmrf-reboot"));
+              }}
+              className="mt-4 self-start rounded-full border border-red-900 bg-red-950 px-4 py-1.5 text-xs font-bold text-red-300 hover:bg-red-900 hover:text-white transition"
+            >
+              ↻ reboot (refresh)
+            </button>
+            <div className="mt-2 text-[10px] text-zinc-600">or just press F5 like a normal person</div>
+          </div>
+        )}
         <div className="flex items-center gap-1.5 border-b border-zinc-800 bg-zinc-900 px-4 py-2">
           <span className="h-3 w-3 rounded-full bg-red-500/80" />
           <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
           <span className="h-3 w-3 rounded-full bg-green-500/80" />
           <span className="ml-3 font-mono text-xs text-zinc-500">lokajith@arch: {cwd} — interactive</span>
-          <span className="ml-auto hidden sm:inline font-mono text-[10px] text-zinc-600">{cwd} · zsh · {Object.keys(fs).length} nodes</span>
+          <span className="ml-auto hidden sm:inline font-mono text-[10px] text-zinc-600">{cwd} · fish · {Object.keys(fs).length} nodes</span>
         </div>
 
         <div
@@ -806,6 +999,44 @@ export default function Terminal() {
                       { type: "out", text: ":" },
                     ]);
                     setInput("");
+                    return;
+                  }
+
+                  // rm -rf / chaos — easter egg
+                  const _noSudo = trimmed.replace(/^sudo\s+/, "").trim();
+                  const _isRm = _noSudo.startsWith("rm ") || _noSudo === "rm";
+                  const _hasRf = _noSudo.includes("-rf") || _noSudo.includes("-fr") || (_noSudo.includes("-r") && _noSudo.includes("-f"));
+                  const _isRootTarget = /(^|\s)\/(?:\s|$|;)/.test(_noSudo) || _noSudo.includes(" /*") || _noSudo.endsWith(" /") || _noSudo === "rm -rf /" || _noSudo.includes("/ --no-preserve-root");
+                  const _hasNoPreserve = _noSudo.includes("--no-preserve-root");
+                  const _hasStar = _noSudo.includes("/*");
+                  if (_isRm && _hasRf && _isRootTarget) {
+                    if (!_hasNoPreserve && !_hasStar) {
+                      setHistory((h) => [
+                        ...h,
+                        { type: "in", text: input },
+                        { type: "out", text: "rm: it is dangerous to operate recursively on '/'" },
+                        { type: "out", text: "rm: use --no-preserve-root to override this failsafe" },
+                      ]);
+                      setInput("");
+                      return;
+                    }
+                    // trigger nuke — also triggers global freeze
+                    setShaking(true);
+                    setCorrupt(true);
+                    setTimeout(() => setShaking(false), 2800);
+                    window.dispatchEvent(new CustomEvent("rmrf-nuke"));
+                    document.documentElement.classList.add("nuked");
+                    setHistory((h) => [
+                      ...h,
+                      { type: "in", text: input },
+                      { type: "out", text: "rm: removing '/' recursively..." },
+                      { type: "out", text: "rm: cannot remove '/proc': Device or resource busy" },
+                      { type: "out", text: "rm: cannot remove '/sys': Operation not permitted" },
+                      { type: "out", text: "�E�R�R�O�R�: filesystem corrupted — �I/O error�" },
+                      { type: "out", text: "EXT4-fs error (device nvme0n1p2): ext4_find_entry:1454: inode #2: comm rm: reading directory lblock 0" },
+                    ]);
+                    setInput("");
+                    setTimeout(() => setNuked(true), 1100);
                     return;
                   }
 

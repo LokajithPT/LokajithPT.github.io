@@ -1,4 +1,6 @@
 import Boot from "./Boot";
+import GlobalNuke from "./GlobalNuke";
+import Konami from "./Konami";
 import Terminal from "./Terminal";
 
 type Project = {
@@ -71,6 +73,8 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-zinc-100">
       <Boot />
+      <Konami />
+      <GlobalNuke />
       {/* grid bg */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,#1a1a1a_1px,transparent_1px),linear-gradient(to_bottom,#1a1a1a_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_110%)] opacity-30" />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-zinc-900/20 via-transparent to-transparent" />
@@ -89,7 +93,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 font-mono text-[11px] text-zinc-400">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              i3 / arch
+              niri / arch
             </span>
             <a
               href="https://github.com/LokajithPT"
@@ -112,7 +116,7 @@ export default function Home() {
             <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
             <span className="h-3 w-3 rounded-full bg-green-500/80" />
             <span className="ml-3 font-mono text-xs text-zinc-500">lokajith@arch: ~</span>
-            <span className="ml-auto font-mono text-[10px] text-zinc-600">zsh · 6.10.3-arch1-1</span>
+            <span className="ml-auto font-mono text-[10px] text-zinc-600">fish · 6.10.3-arch1-1</span>
           </div>
 
           <div className="grid gap-8 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
@@ -157,10 +161,10 @@ export default function Home() {
                 <span className="text-[#1793D1] font-bold">Kernel:</span> <span className="text-zinc-300">6.10.3-arch1-1</span>
               </p>
               <p>
-                <span className="text-[#1793D1] font-bold">WM:</span> <span className="text-zinc-300">i3</span>
+                <span className="text-[#1793D1] font-bold">WM:</span> <span className="text-zinc-300">niri</span>
               </p>
               <p>
-                <span className="text-[#1793D1] font-bold">Shell:</span> <span className="text-zinc-300">zsh</span>
+                <span className="text-[#1793D1] font-bold">Shell:</span> <span className="text-zinc-300">fish</span>
               </p>
               <p>
                 <span className="text-[#1793D1] font-bold">Role:</span> <span className="text-zinc-300">backend dev · rust</span>
@@ -359,7 +363,7 @@ export default function Home() {
           <div className="font-mono text-xs leading-5 text-zinc-500">
             <span className="font-semibold text-zinc-300">LokajithPT</span> © {new Date().getFullYear()} · built with next.js & tailwind.
             <br />
-            <span className="text-zinc-600">arch linux · rust · i3 — btw i use arch</span>
+            <span className="text-zinc-600">arch linux · rust · niri — btw i use arch</span>
             <br />
             <span className="mt-2 inline-block text-[11px] italic text-zinc-500">
               if u think this whole portfolio is vibe-coded — ur goddamn right cause i hate frontend.
