@@ -27,7 +27,7 @@ let FS: Record<string, string> = {
 ${USER_FLAG}
 
 — lokajith
-hint: root flag at /root/root.txt — try 'id', 'sudo -l' — cargo is sus`,
+hint: root flag at /root/root.txt — try 'id', 'sudo -l'`,
   "root.txt": ROOT_FLAG,
   "/root/root.txt": ROOT_FLAG,
   "/etc/os-release": `NAME="Arch Linux"
@@ -50,8 +50,8 @@ const HELP = `arch terminal — all commands actually work:
   cat <file>        cat README.md, cat user.txt, cat /etc/os-release
   grep <pat> [file] grep rust, grep flag user.txt
   find <path> -name <f>   find . -name user.txt
-  sudo -l           check sudo perms (cargo is sus)
-  sudo <cmd>        sudo cat root.txt — try cargo privesc
+  sudo -l           check sudo perms
+  sudo <cmd>        run as root (try sudo -l to see allowed)
   id                show uid/gid
 
   ─ arch / system ─
@@ -83,8 +83,8 @@ const HELP = `arch terminal — all commands actually work:
 
   ─ dev ─
   rustc --version   rust version
-  cargo --version   cargo version (try: cargo new pwn; sudo cargo run)
-  cargo new <name>  create rust project (for privesc)
+  cargo --version   cargo version
+  cargo new <name>  create rust project
   git <arg>         git status, git log --oneline
   curl <url>        curl example.com
   ping <host>       ping archlinux.org
@@ -168,30 +168,36 @@ function runCmd(input: string, hist: string[]): string[] {
           "User lokajith may run the following commands on arch:",
           "    (ALL) NOPASSWD: /usr/bin/cargo",
           "    (ALL) NOPASSWD: /usr/bin/journalctl",
-          "",
-          "hint: cargo is GTFOBins — try 'cargo new pwn' then 'sudo cargo run' or check https://gtfobins.github.io/gtfobins/cargo/",
         ];
       }
       if (sub === "cat root.txt" || sub === "cat /root/root.txt" || sub === "cat ./root.txt" || sub === "cat /root/root.txt") {
-        return ["sudo: lokajith is not in the sudoers file for cat. Only cargo is allowed — try cargo privesc."];
+        return ["Sorry, user lokajith is not allowed to execute '/usr/bin/cat root.txt' as root on arch."];
       }
       if (sub.startsWith("cargo")) {
-        // cargo GTFOBins privesc: sudo cargo run/build with build.rs execution as root
         const cargoArgs = sub.slice(5).trim();
-        if (cargoArgs.includes("run") || cargoArgs.includes("build") || cargoArgs === "" || cargoArgs.includes("--manifest-path")) {
+        // normal cargo behavior as root — only leaks flag if src was overwritten to read /root/root.txt
+        const hasExploit = Object.entries(FS).some(
+          ([k, v]) => (k.includes("pwn/src/main.rs") || k.includes("pwn/build.rs") || k.includes("src/main.rs")) && v.includes("/root/root.txt")
+        );
+        if ((cargoArgs.includes("run") || cargoArgs.includes("build")) && hasExploit) {
           return [
             "   Compiling pwn v0.1.0 (/home/lokajith/pwn)",
             "    Finished `dev` profile [unoptimized] target(s) in 0.42s",
             "     Running `target/debug/pwn` as root...",
             `uid=0(root) gid=0(root) groups=0(root)`,
-            `cat /root/root.txt:`,
             ROOT_FLAG,
-            "",
-            "— nice. you pwned cargo. send this flag to lokajith, he owes you nothing but respect.",
+          ];
+        }
+        if (cargoArgs.includes("run") || cargoArgs.includes("build") || cargoArgs === "" || cargoArgs.includes("--manifest-path")) {
+          return [
+            "   Compiling pwn v0.1.0 (/home/lokajith/pwn)",
+            "    Finished `dev` profile [unoptimized] target(s) in 0.42s",
+            "     Running `target/debug/pwn` as root...",
+            "hello from pwn",
           ];
         }
         if (cargoArgs.includes("--help") || cargoArgs.includes("-h")) {
-          return ["cargo GTFOBins: sudo cargo run --manifest-path pwn/Cargo.toml — build.rs runs as root"];
+          return ["cargo help — try 'cargo new <name>' to create a project"];
         }
         return runCmd("cargo " + cargoArgs, hist);
       }
@@ -383,10 +389,10 @@ function runCmd(input: string, hist: string[]): string[] {
         return [`     Created binary (application) \`${name}\` package`];
       }
       if (sub === "run" || sub.startsWith("run ") || sub === "build" || sub.startsWith("build ")) {
-        return ["   Compiling pwn v0.1.0\n    Finished `dev` profile [unoptimized]\n     Running `target/debug/pwn`\nhello from pwn — try 'sudo cargo run' for root"];
+        return ["   Compiling pwn v0.1.0\n    Finished `dev` profile [unoptimized]\n     Running `target/debug/pwn`\nhello from pwn"];
       }
-      if (sub.includes("--help") || sub === "help") return ["cargo GTFOBins: cargo new pwn; sudo cargo run — build.rs runs as root. also try 'sudo -l'"];
-      return ["cargo: try 'cargo --version', 'cargo new pwn', 'cargo run', 'sudo cargo run' (privesc)"];
+      if (sub.includes("--help") || sub === "help") return ["cargo help — see https://doc.rust-lang.org/cargo/"];
+      return ["cargo: try 'cargo --version', 'cargo new <name>', 'cargo run'"];
     }
     case "neofetch": {
       return [
