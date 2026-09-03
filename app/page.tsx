@@ -283,6 +283,10 @@ export default function Home() {
             <span className="font-semibold text-zinc-300">LokajithPT</span> © {new Date().getFullYear()} · built with next.js & tailwind.
             <br />
             <span className="text-zinc-600">tip: `vechuko` means push.</span>
+            <br />
+            <span className="mt-2 inline-block text-[11px] italic text-zinc-500">
+              if u think this whole portfolio is vibe-coded — ur goddamn right cause i hate frontend.
+            </span>
           </div>
           <div className="flex gap-3 font-mono text-xs">
             <a href="https://github.com/LokajithPT" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white">
