@@ -435,19 +435,121 @@ export default function Terminal() {
   const [input, setInput] = useState("");
   const [histIdx, setHistIdx] = useState<number | null>(null);
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const [pager, setPager] = useState<null | { asRoot: boolean; src: string }>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [history]);
+  }, [history, pager]);
+
+  const handlePagerInput = (raw: string): string[] => {
+    const cmd = raw.trim();
+    if (cmd === "q" || cmd === ":q" || cmd === ":q!" || cmd === "quit" || cmd === "exit") {
+      setPager(null);
+      return ["(less) quit — back to shell"];
+    }
+    if (cmd === "!/bin/sh" || cmd === "!sh" || cmd === "!/bin/bash" || cmd === "!bash") {
+      if (pager?.asRoot) {
+        setPager(null);
+        return [`# id`, `uid=0(root) gid=0(root) groups=0(root)`, ``, ROOT_FLAG, ``, "# — you escaped less as root. cargo help doc → less → !sh — classic GTFOBins."];
+      }
+      setPager(null);
+      return ["$ id", "uid=1000(lokajith) gid=1000(lokajith) — not root (try sudo cargo help doc then !/bin/sh)"];
+    }
+    if (cmd.startsWith("!cat ") || cmd.startsWith("!:cat ")) {
+      const f = cmd.replace(/^!cat\s+/, "").trim();
+      if (f.includes("root.txt") || f.includes("/root")) {
+        if (pager?.asRoot) return [ROOT_FLAG];
+        return ["cat: " + f + ": Permission denied"];
+      }
+      const c = FS[f] || FS[f.replace(/^\//, "")];
+      return c ? [c] : [`cat: ${f}: No such file or directory`];
+    }
+    if (cmd.startsWith(":e ")) {
+      const f = cmd.slice(3).trim();
+      if (f.includes("root.txt") && pager?.asRoot) return [ROOT_FLAG];
+      const c = FS[f] || FS[f.replace(/^\//, "")] || FS["root.txt"];
+      if (f.includes("root.txt") && !pager?.asRoot) return ["Permission denied — need root pager (try sudo cargo help doc then :e /root/root.txt)"];
+      return c ? [c] : [`${f} — no such file`];
+    }
+    if (cmd === "h" || cmd === "help") {
+      return ["less help: q=:quit  !/bin/sh=:shell  :e <file>=:open  !cat <file>=:cat  h=:help"];
+    }
+    return [`(less) unknown command '${cmd}' — q to quit, !/bin/sh for shell, :e /root/root.txt to read`];
+  };
 
   const submit = () => {
     const trimmed = input.trim();
     if (!trimmed && input === "") return;
+
+    // if in less pager, handle pager commands first
+    if (pager) {
+      if (trimmed) setCmdHistory((h) => [...h, trimmed]);
+      setHistIdx(null);
+      const out = handlePagerInput(trimmed);
+      setHistory((h) => [...h, { type: "in", text: input }, ...out.map((t) => ({ type: "out" as const, text: t }))]);
+      setInput("");
+      return;
+    }
+
     if (trimmed) setCmdHistory((h) => [...h, trimmed]);
     setHistIdx(null);
+
+    // intercept sudo cargo help doc → enter pager (real GTFOBins)
+    if (trimmed === "sudo cargo help doc" || trimmed === "sudo cargo help  doc" || trimmed === "sudo -E cargo help doc") {
+      setPager({ asRoot: true, src: "cargo" });
+      setHistory((h) => [
+        ...h,
+        { type: "in", text: input },
+        { type: "out", text: "cargo-doc(1) — cargo documentation (via less)" },
+        { type: "out", text: "— loading /usr/share/doc/cargo/... (less pager, running as root)" },
+        { type: "out", text: ":" },
+        { type: "out", text: "(less) — q=quit  !/bin/sh=shell  :e /root/root.txt=read  h=help" },
+      ]);
+      setInput("");
+      return;
+    }
+    if (trimmed === "cargo help doc") {
+      setPager({ asRoot: false, src: "cargo" });
+      setHistory((h) => [
+        ...h,
+        { type: "in", text: input },
+        { type: "out", text: "cargo-doc(1) — cargo documentation (via less)" },
+        { type: "out", text: ":" },
+        { type: "out", text: "(less) — q=quit  !/bin/sh=shell  :e <file>=read" },
+      ]);
+      setInput("");
+      return;
+    }
+    // also handle sudo less
+    if (trimmed.startsWith("sudo less ") || trimmed === "sudo less") {
+      const f = trimmed.slice(10).trim() || "/etc/hosts";
+      setPager({ asRoot: true, src: "less" });
+      setHistory((h) => [
+        ...h,
+        { type: "in", text: input },
+        { type: "out", text: `${f} (less pager, running as root) — 5 lines` },
+        { type: "out", text: ":" },
+        { type: "out", text: "(less) — q=quit  !/bin/sh=shell  :e /root/root.txt=read" },
+      ]);
+      setInput("");
+      return;
+    }
+    if (trimmed.startsWith("less ")) {
+      const f = trimmed.slice(5).trim() || "/etc/hosts";
+      setPager({ asRoot: false, src: "less" });
+      const c = FS[f] || "1 line";
+      setHistory((h) => [
+        ...h,
+        { type: "in", text: input },
+        { type: "out", text: c.split("\n")[0] + " (less)" },
+        { type: "out", text: ":" },
+      ]);
+      setInput("");
+      return;
+    }
 
     const outLines = runCmd(trimmed === "" ? "" : input, [...cmdHistory, trimmed]);
     if (outLines[0] === "__CLEAR__") {
