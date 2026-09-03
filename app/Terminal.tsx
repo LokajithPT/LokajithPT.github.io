@@ -100,6 +100,8 @@ const HELP = `arch terminal — all commands actually work (stateful cwd, real f
   curl / ping / echo
 
   ─ dev ─
+  vim [file]           vim edit (vim user.txt, :!sh for shell)
+  nvim [file]          neovim (same as vim)
   rustc --version      rust version
   cargo --version      cargo version
   cargo new <name>     create rust project`;
@@ -133,7 +135,7 @@ export default function Terminal() {
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [cwd, setCwd] = useState("/home/lokajith");
   const [fs, setFs] = useState<Record<string, FSEntry>>(() => ({ ...initialFS }));
-  const [pager, setPager] = useState<null | { asRoot: boolean; src: string }>(null);
+  const [pager, setPager] = useState<null | { asRoot: boolean; src: string; file?: string }>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -160,20 +162,30 @@ export default function Terminal() {
 
   const handlePagerInput = (raw: string): string[] => {
     const cmd = raw.trim();
-    if (cmd === "q" || cmd === ":q" || cmd === ":q!" || cmd === "quit" || cmd === "exit") {
+    // vim commands also work in less pager (GTFOBins)
+    const isVim = pager?.src === "vim";
+    if (cmd === "q" || cmd === ":q" || cmd === ":q!" || cmd === "quit" || cmd === "exit" || cmd === ":quit") {
       setPager(null);
-      return ["(less) quit — back to shell"];
+      return [isVim ? `"${pager?.src}" quit — back to shell` : "(less) quit — back to shell"];
     }
-    if (cmd === "!/bin/sh" || cmd === "!sh" || cmd === "!/bin/bash" || cmd === "!bash") {
+    if (cmd === ":w" || cmd === ":write") {
+      return [isVim ? `"${pager?.src}" written (mock)` : "less: no write"];
+    }
+    if (cmd === ":wq" || cmd === ":x") {
+      setPager(null);
+      return [isVim ? `written and quit` : "(less) quit"];
+    }
+    if (cmd === "!/bin/sh" || cmd === "!sh" || cmd === "!/bin/bash" || cmd === "!bash" || cmd === ":!/bin/sh" || cmd === ":!sh" || cmd === ":!bash") {
       if (pager?.asRoot) {
         setPager(null);
-        return [`# id`, `uid=0(root) gid=0(root) groups=0(root)`, ``, ROOT_FLAG, ``, "# — you escaped less as root. cargo help doc → less → !sh — classic GTFOBins."];
+        const via = isVim ? "vim → :!sh" : "less → !sh";
+        return [`# id`, `uid=0(root) gid=0(root) groups=0(root)`, ``, ROOT_FLAG, ``, `# — you escaped ${via} as root. GTFOBins.`];
       }
       setPager(null);
-      return ["$ id", "uid=1000(lokajith) gid=1000(lokajith) — not root (try sudo cargo help doc then !/bin/sh)"];
+      return ["$ id", "uid=1000(lokajith) gid=1000(lokajith) — not root (try sudo " + (isVim ? "vim" : "cargo help doc") + " then !/bin/sh)"];
     }
-    if (cmd.startsWith("!cat ")) {
-      const f = cmd.replace(/^!cat\s+/, "").trim();
+    if (cmd.startsWith("!cat ") || cmd.startsWith(":!cat ")) {
+      const f = cmd.replace(/^:?!cat\s+/, "").trim();
       const abs = resolve(pager?.asRoot ? "/root" : cwd, f);
       const target = f.includes("root.txt") ? "/root/root.txt" : abs;
       if (f.includes("root.txt") && !pager?.asRoot) return ["cat: " + f + ": Permission denied"];
@@ -182,14 +194,14 @@ export default function Terminal() {
     }
     if (cmd.startsWith(":e ")) {
       const f = cmd.slice(3).trim();
-      const abs = resolve("/root", f);
       if (f.includes("root.txt") && pager?.asRoot) return [fs["/root/root.txt"]?.content || ROOT_FLAG];
-      if (f.includes("root.txt") && !pager?.asRoot) return ["Permission denied — need root pager (try sudo cargo help doc then :e /root/root.txt)"];
+      if (f.includes("root.txt") && !pager?.asRoot) return ["Permission denied — need root pager (try sudo vim then :e /root/root.txt)"];
+      const abs = resolve(cwd, f);
       const e = fs[abs] || fs[f];
       return e?.content ? [e.content] : [`${f} — no such file`];
     }
-    if (cmd === "h" || cmd === "help") return ["less help: q=:quit  !/bin/sh=:shell  :e <file>=:open  !cat <file>=:cat  h=:help"];
-    return [`(less) unknown command '${cmd}' — q to quit, !/bin/sh for shell, :e /root/root.txt to read`];
+    if (cmd === "h" || cmd === "help" || cmd === ":help") return [isVim ? "vim help: :q=:quit :w=:write :wq=:save/quit :!/bin/sh=:shell :e <file>=:open" : "less help: q=:quit  !/bin/sh=:shell  :e <file>=:open  !cat <file>=:cat  h=:help"];
+    return [`(${isVim ? "vim" : "less"}) unknown command '${cmd}' — q to quit, ${isVim ? ":!/bin/sh" : "!/bin/sh"} for shell, :e /root/root.txt to read`];
   };
 
   const runCmd = (rawInput: string, hist: string[]): string[] => {
@@ -440,6 +452,8 @@ export default function Terminal() {
             "",
             "User lokajith may run the following commands on arch:",
             "    (ALL) NOPASSWD: /usr/bin/cargo",
+            "    (ALL) NOPASSWD: /usr/bin/vim",
+            "    (ALL) NOPASSWD: /usr/bin/nvim",
             "    (ALL) NOPASSWD: /usr/bin/journalctl",
           ];
         }
@@ -743,6 +757,51 @@ export default function Terminal() {
                     setInput("");
                     return;
                   }
+                  // vim / nvim — real editor, GTFOBins :!/bin/sh
+                  if (
+                    trimmed === "vim" ||
+                    trimmed.startsWith("vim ") ||
+                    trimmed === "nvim" ||
+                    trimmed.startsWith("nvim ") ||
+                    trimmed === "vi" ||
+                    trimmed.startsWith("vi ")
+                  ) {
+                    const fileRaw = trimmed.split(/\s+/).slice(1).join(" ").trim() || "";
+                    const file = fileRaw ? resolve(cwd, fileRaw) : "";
+                    const content = file ? fs[file]?.content || "" : "";
+                    setPager({ asRoot: false, src: "vim", file });
+                    setHistory((h) => [
+                      ...h,
+                      { type: "in", text: input },
+                      { type: "out", text: file ? `"${fileRaw}" ${content ? content.split("\n").length + "L" : "[New File]"}` : "~ VIM - Vi IMproved"},
+                      { type: "out", text: content ? content.split("\n").slice(0, 20).join("\n") : "~"},
+                      { type: "out", text: ":" },
+                      { type: "out", text: "(vim) — :q=quit :w=save :wq=save/quit :!/bin/sh=shell :e /root/root.txt" },
+                    ]);
+                    setInput("");
+                    return;
+                  }
+                  if (
+                    trimmed.startsWith("sudo vim") ||
+                    trimmed.startsWith("sudo nvim") ||
+                    trimmed.startsWith("sudo vi")
+                  ) {
+                    const parts = trimmed.split(/\s+/);
+                    const fileRaw = parts.slice(2).join(" ").trim() || "";
+                    const file = fileRaw ? resolve(cwd, fileRaw) : "";
+                    const content = file ? fs[file]?.content || "" : "";
+                    setPager({ asRoot: true, src: "vim", file });
+                    setHistory((h) => [
+                      ...h,
+                      { type: "in", text: input },
+                      { type: "out", text: file ? `"${fileRaw}" ${content ? content.split("\n").length + "L" : "[New File]"} (as root)` : "~ VIM - Vi IMproved (as root)"},
+                      { type: "out", text: content ? content.split("\n").slice(0, 20).join("\n") : "~"},
+                      { type: "out", text: ":" },
+                      { type: "out", text: "(vim as root) — :!/bin/sh=shell → root  :e /root/root.txt" },
+                    ]);
+                    setInput("");
+                    return;
+                  }
 
                   const outLines = runCmd(trimmed === "" ? "" : input, [...cmdHistory, trimmed]);
                   if (outLines[0] === "__CLEAR__") {
@@ -792,7 +851,13 @@ export default function Terminal() {
               spellCheck={false}
               autoComplete="off"
               className="flex-1 bg-transparent text-zinc-100 outline-none placeholder:text-zinc-600"
-              placeholder={pager ? "less: q, !/bin/sh, :e /root/root.txt, h" : "try: ls -la, cd projects, mkdir test, cargo new pwn, sudo -l..."}
+              placeholder={
+                pager
+                  ? pager.src === "vim"
+                    ? "vim: :q, :w, :wq, :!/bin/sh, :e /root/root.txt"
+                    : "less: q, !/bin/sh, :e /root/root.txt, h"
+                  : "try: ls -la, vim user.txt, sudo vim, sudo -l, cargo help doc..."
+              }
             />
           </div>
         </div>
@@ -800,11 +865,11 @@ export default function Terminal() {
         <div className="flex flex-wrap gap-1.5 border-t border-zinc-900 bg-zinc-950 px-3 py-2">
           {[
             "ls -la",
-            "cd projects",
-            "cat user.txt",
+            "vim user.txt",
+            "sudo vim",
             "sudo -l",
-            "cargo new pwn",
             "sudo cargo help doc",
+            "sudo nvim",
             "clear",
           ].map((c) => (
             <button
