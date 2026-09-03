@@ -1,3 +1,5 @@
+import Boot from "./Boot";
+
 type Project = {
   name: string;
   tagline: string;
@@ -12,12 +14,12 @@ type Project = {
 const projects: Project[] = [
   {
     name: "gilma",
-    tagline: "git-like memory access — 4 variants",
-    desc: "Simple file sync that speaks Tamil but thinks in systems. Delta sync, hash-verified. Same idea, four implementations.",
+    tagline: "file sync — 4 variants",
+    desc: "Minimal file sync — delta sync, hash-verified. Same protocol, four implementations. Raw TCP, no frameworks, no magic.",
     lang: ["Rust", "C++17"],
-    color: "#ff4d4d",
+    color: "#1793D1",
     status: "4 versions",
-    features: ["vechuko / vangiko / kaami — tamil CLI", "delta sync + SHA-256 verify", "TCP sockets, zero frameworks"],
+    features: ["delta sync + SHA-256 verify", "raw TCP sockets, zero deps", "manifest-based multi-project sync"],
     links: [
       { label: "gilma", href: "https://github.com/LokajithPT/gilma" },
       { label: "gilmaclientside", href: "https://github.com/LokajithPT/gilmaclientside" },
@@ -41,8 +43,8 @@ const projects: Project[] = [
   },
   {
     name: "lkey",
-    tagline: "lowkey — programming should be a conversation",
-    desc: "An English-readable programming language. `var name is \"Alice\"` and `say \"hello\"`. Lexer → Parser → Interpreter, all hand-rolled in C++.",
+    tagline: "lowkey — a readable programming language",
+    desc: "A simple, readable programming language. `var name is \"Alice\"` and `say \"hello\"`. Lexer → Parser → Interpreter, hand-rolled in C++.",
     lang: ["C++17", "CMake"],
     color: "#7c5cff",
     status: "32 commits",
@@ -67,19 +69,24 @@ const projects: Project[] = [
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-zinc-100">
+      <Boot />
       {/* grid bg */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,#1a1a1a_1px,transparent_1px),linear-gradient(to_bottom,#1a1a1a_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_110%)] opacity-30" />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-zinc-900/30 via-transparent to-transparent" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-zinc-900/20 via-transparent to-transparent" />
 
-      {/* NAV */}
+      {/* NAV — arch style */}
       <nav className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#0a0a0a]/70 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           <a href="#" className="flex items-center gap-2 font-mono text-sm tracking-tight">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-white text-black font-bold">L</span>
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#1793D1] text-white font-bold">A</span>
             <span className="font-semibold">LokajithPT</span>
-            <span className="hidden sm:inline text-zinc-500">/ portfolio</span>
+            <span className="hidden sm:inline text-zinc-500">/ arch · rust</span>
           </a>
           <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 font-mono text-[11px] text-zinc-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              i3 / arch
+            </span>
             <a
               href="https://github.com/LokajithPT"
               target="_blank"
@@ -88,39 +95,103 @@ export default function Home() {
             >
               ↗ github
             </a>
-            <a
-              href="mailto:lokajithpt@gmail.com"
-              className="hidden sm:inline-flex rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-black transition hover:bg-zinc-200"
-            >
-              say hi
-            </a>
           </div>
         </div>
       </nav>
 
-      {/* HERO */}
-      <header className="mx-auto w-full max-w-6xl px-6 pt-16 pb-10 sm:pt-24 sm:pb-16">
-        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs font-mono text-zinc-400 backdrop-blur">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          building in public
+      {/* HERO — neofetch / terminal style */}
+      <header className="mx-auto w-full max-w-6xl px-6 pt-10 pb-10 sm:pt-16 sm:pb-14">
+        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
+          {/* terminal bar */}
+          <div className="flex items-center gap-1.5 border-b border-zinc-800 bg-zinc-900 px-4 py-2.5">
+            <span className="h-3 w-3 rounded-full bg-red-500/80" />
+            <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
+            <span className="h-3 w-3 rounded-full bg-green-500/80" />
+            <span className="ml-3 font-mono text-xs text-zinc-500">lokajith@arch: ~</span>
+            <span className="ml-auto font-mono text-[10px] text-zinc-600">zsh · 6.10.3-arch1-1</span>
+          </div>
+
+          <div className="grid gap-8 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
+            {/* arch ascii */}
+            <pre className="select-none text-[8px] leading-[8px] text-[#1793D1] sm:text-[9px] sm:leading-[9px]">
+{`                  -\`
+                 .o+\`
+                \`ooo/
+               \`+oooo:
+              \`+oooooo:
+              -+oooooo+:
+            \`/:-:++oooo+:
+           \`/++++/+++++++:
+          \`/++++++++++++++:
+         \`/+++ooooooooooooo/\`
+        ./ooosssso++osssssso+\`
+       .oos\`soooooo\`ossssss+o/\`
+      -osss \`sooooo\`osssssssso/\`
+     :ossss \`sooooo\`ossssssssss/\`
+    /ossss  \`sooooo\`ossssssssssss/\`
+   :ossss   \`sooooo\`osssssssssso
+  /ossss    \`soooo\` ossssssso
+ /ossss     \`sooo\`  osssso
+:ossss       \`so\`   ossso
+/ossso         \`.     \`/os
+\`ossso\`              \`/oss
+ \`osso\`              \`/oss\``}
+            </pre>
+
+            {/* neofetch info */}
+            <div className="font-mono text-xs leading-6">
+              <p>
+                <span className="text-[#1793D1]">lokajith</span>
+                <span className="text-zinc-600">@</span>
+                <span className="text-[#1793D1]">arch</span>
+              </p>
+              <p className="text-zinc-600">───────────────</p>
+              <p>
+                <span className="text-[#1793D1] font-bold">OS:</span> <span className="text-zinc-300">Arch Linux x86_64</span>
+              </p>
+              <p>
+                <span className="text-[#1793D1] font-bold">Kernel:</span> <span className="text-zinc-300">6.10.3-arch1-1</span>
+              </p>
+              <p>
+                <span className="text-[#1793D1] font-bold">WM:</span> <span className="text-zinc-300">i3</span>
+              </p>
+              <p>
+                <span className="text-[#1793D1] font-bold">Shell:</span> <span className="text-zinc-300">zsh</span>
+              </p>
+              <p>
+                <span className="text-[#1793D1] font-bold">Role:</span> <span className="text-zinc-300">backend dev · rust</span>
+              </p>
+              <p>
+                <span className="text-[#1793D1] font-bold">Loves:</span> <span className="text-zinc-300">linux · systems · parsers · sockets</span>
+              </p>
+              <p className="mt-4 text-sm">
+                <span className="text-white font-medium">making questionable decisions</span>
+                <span className="text-zinc-500"> and </span>
+                <span className="bg-white px-1 py-0.5 font-bold text-black">pushing to prod</span>
+                <span className="text-zinc-500">.</span>
+              </p>
+              <p className="mt-2 flex gap-1.5">
+                <span className="h-3 w-6 bg-[#1793D1]" />
+                <span className="h-3 w-6 bg-zinc-800" />
+                <span className="h-3 w-6 bg-white" />
+                <span className="h-3 w-6 bg-zinc-600" />
+              </p>
+            </div>
+          </div>
+
+          {/* command line preview */}
+          <div className="border-t border-zinc-900 bg-black px-6 py-3 font-mono text-xs">
+            <span className="text-emerald-400">➜</span> <span className="text-[#1793D1]">~</span> <span className="text-zinc-500">cargo --version</span>
+            <span className="ml-4 text-zinc-600">cargo 1.85.0</span>
+            <span className="ml-6 hidden sm:inline text-zinc-700">|</span>
+            <span className="ml-6 hidden sm:inline">
+              <span className="text-emerald-400">➜</span> <span className="text-[#1793D1]">~</span> <span className="text-zinc-500">ls projects/</span>
+              <span className="ml-2 text-zinc-300">gilma/ knotApp/ lkey/ leviathan/</span>
+            </span>
+          </div>
         </div>
 
-        <h1 className="mt-6 font-mono text-[2.2rem] font-black leading-[0.9] tracking-tighter sm:text-6xl md:text-7xl">
-          <span className="block text-white">Lokajith</span>
-          <span className="block text-zinc-600">PT</span>
-        </h1>
-
-        <p className="mt-6 max-w-2xl font-mono text-base leading-relaxed text-zinc-300 sm:text-lg">
-          <span className="text-white font-medium">making questionable decisions</span>
-          <span className="text-zinc-500"> and </span>
-          <span className="rounded bg-white px-1.5 py-0.5 font-bold text-black">pushing to prod</span>
-          <span className="text-zinc-500">.</span>
-        </p>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-[15px]">
-          builder · rust / c++ / python · file-sync that speaks tamil, a language that reads like english, and a modular workspace called leviathan.
-        </p>
-
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           <a
             href="#projects"
             className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
@@ -140,12 +211,12 @@ export default function Home() {
           </a>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-2 font-mono text-xs text-zinc-500">
+        <div className="mt-8 flex flex-wrap gap-2 font-mono text-xs text-zinc-500">
           <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">rust</span>
-          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">c++17</span>
-          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">python</span>
-          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">next.js</span>
-          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">sockets & parsers</span>
+          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">arch linux</span>
+          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">systems</span>
+          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">tcp sockets</span>
+          <span className="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1">parsers</span>
         </div>
       </header>
 
@@ -153,7 +224,7 @@ export default function Home() {
       <section id="projects" className="mx-auto w-full max-w-6xl px-6 pb-12">
         <div className="mb-6 flex items-baseline justify-between">
           <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">projects</h2>
-          <span className="hidden font-mono text-xs text-zinc-600 sm:inline">tamil CLI · english syntax · built from scratch</span>
+          <span className="hidden font-mono text-xs text-zinc-600 sm:inline">rust · linux · built from scratch</span>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -236,17 +307,15 @@ export default function Home() {
       <section className="mx-auto w-full max-w-6xl px-6 pb-12">
         <div className="grid gap-6 md:grid-cols-5">
           <div className="rounded-2xl border border-zinc-800 bg-white p-6 text-black md:col-span-3">
-            <p className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-500">manifesto</p>
-            <p className="mt-3 text-lg font-semibold leading-7">
-              i build tools i want to use. if they speak tamil or english, even better.
-            </p>
+            <p className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-500">manifesto — backend brain</p>
+            <p className="mt-3 text-lg font-semibold leading-7">backend dev in rust. linux is home. arch is the way.</p>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
-              no heavy frameworks. just sockets, parsers, and focused iteration. gilma taught me sync is hard. lkey taught me language design is harder. leviathan taught me to ship consistently.
+              i build systems-level tools — file sync over raw sockets, language frontends from scratch, knowledge graphs that actually link. no heavy frameworks. just rust, c++, and a terminal that never closes.
             </p>
             <div className="mt-5 flex flex-wrap gap-2 font-mono text-xs">
-              <span className="rounded-full bg-black px-3 py-1 text-white">ships fast</span>
-              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">iterates fast</span>
-              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">ships often</span>
+              <span className="rounded-full bg-[#1793D1] px-3 py-1 text-white">btw i use arch</span>
+              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">rust &gt; everything</span>
+              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">linux-first</span>
             </div>
           </div>
 
@@ -254,7 +323,7 @@ export default function Home() {
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
               <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">stack</p>
               <div className="mt-4 grid grid-cols-2 gap-2 font-mono text-xs">
-                {["Rust", "C++17", "Python", "Next.js / React", "TCP Sockets", "CMake / Cargo", "Tailwind", "Git / GH Actions"].map((s) => (
+                {["Rust", "C++17", "Linux / Arch", "TCP / Sockets", "Cargo / CMake", "Python", "Tokio / Async", "Git / GH Actions"].map((s) => (
                   <span key={s} className="rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-300">
                     {s}
                   </span>
@@ -265,7 +334,7 @@ export default function Home() {
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
               <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">currently</p>
               <p className="mt-3 font-mono text-sm leading-6 text-zinc-300">
-                polishing gilma & lkey · building knot · open to collabs on parsers, sync, and systems work
+                polishing gilma & lkey · building knotApp · writing more rust · always on linux
               </p>
               <a
                 href="https://github.com/LokajithPT"
@@ -286,7 +355,7 @@ export default function Home() {
           <div className="font-mono text-xs leading-5 text-zinc-500">
             <span className="font-semibold text-zinc-300">LokajithPT</span> © {new Date().getFullYear()} · built with next.js & tailwind.
             <br />
-            <span className="text-zinc-600">tip: `vechuko` means push.</span>
+            <span className="text-zinc-600">arch linux · rust · i3 — btw i use arch</span>
             <br />
             <span className="mt-2 inline-block text-[11px] italic text-zinc-500">
               if u think this whole portfolio is vibe-coded — ur goddamn right cause i hate frontend.
