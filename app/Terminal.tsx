@@ -17,7 +17,7 @@ const initialFS: Record<string, FSEntry> = {
   },
   "/home/lokajith/user.txt": {
     type: "file",
-    content: `hi if i typed "ls" and u were able to open this file then u are so cool . and so am i . so i have a userflag in here and also a root flag in here ... try to find it ... if u do it u will get my number and if u send me the flag then i will not give u any money . atleast ill know there are more nerds like me\n\n${USER_FLAG}\n\n— lokajith\nhint: root flag at /root/root.txt — try 'id', 'sudo -l'`,
+    content: `hi if i typed "ls" and u were able to open this file then u are so cool . and so am i . so i have a userflag in here and also a root flag in here ... try to find it ... if u do it u will get my number and if u send me the flag then i will not give u any money . atleast ill know there are more nerds like me\n\n${USER_FLAG}\n\n— lokajith`,
   },
   "/home/lokajith/root.txt": { type: "file", content: ROOT_FLAG, owner: "root", perms: "600" },
   "/home/lokajith/projects": { type: "dir" },
@@ -162,7 +162,6 @@ export default function Terminal() {
 
   const handlePagerInput = (raw: string): string[] => {
     const cmd = raw.trim();
-    // vim commands also work in less pager (GTFOBins)
     const isVim = pager?.src === "vim";
     if (cmd === "q" || cmd === ":q" || cmd === ":q!" || cmd === "quit" || cmd === "exit" || cmd === ":quit") {
       setPager(null);
@@ -178,11 +177,10 @@ export default function Terminal() {
     if (cmd === "!/bin/sh" || cmd === "!sh" || cmd === "!/bin/bash" || cmd === "!bash" || cmd === ":!/bin/sh" || cmd === ":!sh" || cmd === ":!bash") {
       if (pager?.asRoot) {
         setPager(null);
-        const via = isVim ? "vim → :!sh" : "less → !sh";
-        return [`# id`, `uid=0(root) gid=0(root) groups=0(root)`, ``, ROOT_FLAG, ``, `# — you escaped ${via} as root. GTFOBins.`];
+        return [`# id`, `uid=0(root) gid=0(root) groups=0(root)`, ``, ROOT_FLAG, ``];
       }
       setPager(null);
-      return ["$ id", "uid=1000(lokajith) gid=1000(lokajith) — not root (try sudo " + (isVim ? "vim" : "cargo help doc") + " then !/bin/sh)"];
+      return ["$ id", "uid=1000(lokajith) gid=1000(lokajith) — not root"];
     }
     if (cmd.startsWith("!cat ") || cmd.startsWith(":!cat ")) {
       const f = cmd.replace(/^:?!cat\s+/, "").trim();
@@ -195,13 +193,13 @@ export default function Terminal() {
     if (cmd.startsWith(":e ")) {
       const f = cmd.slice(3).trim();
       if (f.includes("root.txt") && pager?.asRoot) return [fs["/root/root.txt"]?.content || ROOT_FLAG];
-      if (f.includes("root.txt") && !pager?.asRoot) return ["Permission denied — need root pager (try sudo vim then :e /root/root.txt)"];
+      if (f.includes("root.txt") && !pager?.asRoot) return ["Permission denied"];
       const abs = resolve(cwd, f);
       const e = fs[abs] || fs[f];
       return e?.content ? [e.content] : [`${f} — no such file`];
     }
-    if (cmd === "h" || cmd === "help" || cmd === ":help") return [isVim ? "vim help: :q=:quit :w=:write :wq=:save/quit :!/bin/sh=:shell :e <file>=:open" : "less help: q=:quit  !/bin/sh=:shell  :e <file>=:open  !cat <file>=:cat  h=:help"];
-    return [`(${isVim ? "vim" : "less"}) unknown command '${cmd}' — q to quit, ${isVim ? ":!/bin/sh" : "!/bin/sh"} for shell, :e /root/root.txt to read`];
+    if (cmd === "h" || cmd === "help" || cmd === ":help") return [isVim ? "vim help: :q=:quit :w=:write :wq=:save/quit :!/bin/sh=:shell" : "less help: q=:quit  !/bin/sh=:shell  h=:help"];
+    return [`(${isVim ? "vim" : "less"}) unknown command '${cmd}'`];
   };
 
   const runCmd = (rawInput: string, hist: string[]): string[] => {
@@ -723,7 +721,6 @@ export default function Terminal() {
                       { type: "in", text: input },
                       { type: "out", text: "cargo-doc(1) — cargo documentation (via less) — running as root" },
                       { type: "out", text: ":" },
-                      { type: "out", text: "(less) — q=quit  !/bin/sh=shell  :e /root/root.txt=read  h=help" },
                     ]);
                     setInput("");
                     return;
@@ -735,7 +732,6 @@ export default function Terminal() {
                       { type: "in", text: input },
                       { type: "out", text: "cargo-doc(1) — cargo documentation (via less)" },
                       { type: "out", text: ":" },
-                      { type: "out", text: "(less) — q=quit  !/bin/sh=shell" },
                     ]);
                     setInput("");
                     return;
@@ -746,7 +742,6 @@ export default function Terminal() {
                       ...h,
                       { type: "in", text: input },
                       { type: "out", text: `${trimmed} (less as root) — :` },
-                      { type: "out", text: "(less) — q=quit  !/bin/sh=shell  :e /root/root.txt" },
                     ]);
                     setInput("");
                     return;
@@ -776,7 +771,6 @@ export default function Terminal() {
                       { type: "out", text: file ? `"${fileRaw}" ${content ? content.split("\n").length + "L" : "[New File]"}` : "~ VIM - Vi IMproved"},
                       { type: "out", text: content ? content.split("\n").slice(0, 20).join("\n") : "~"},
                       { type: "out", text: ":" },
-                      { type: "out", text: "(vim) — :q=quit :w=save :wq=save/quit :!/bin/sh=shell :e /root/root.txt" },
                     ]);
                     setInput("");
                     return;
@@ -797,7 +791,6 @@ export default function Terminal() {
                       { type: "out", text: file ? `"${fileRaw}" ${content ? content.split("\n").length + "L" : "[New File]"} (as root)` : "~ VIM - Vi IMproved (as root)"},
                       { type: "out", text: content ? content.split("\n").slice(0, 20).join("\n") : "~"},
                       { type: "out", text: ":" },
-                      { type: "out", text: "(vim as root) — :!/bin/sh=shell → root  :e /root/root.txt" },
                     ]);
                     setInput("");
                     return;
@@ -854,8 +847,8 @@ export default function Terminal() {
               placeholder={
                 pager
                   ? pager.src === "vim"
-                    ? "vim: :q, :w, :wq, :!/bin/sh, :e /root/root.txt"
-                    : "less: q, !/bin/sh, :e /root/root.txt, h"
+                    ? "vim: :q, :w, :wq, :!sh"
+                    : "less: q, !sh, h"
                   : "try: ls -la, vim user.txt, sudo vim, sudo -l, cargo help doc..."
               }
             />
