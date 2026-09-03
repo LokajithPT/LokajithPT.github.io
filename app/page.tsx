@@ -1,4 +1,5 @@
 import Boot from "./Boot";
+import Terminal from "./Terminal";
 
 type Project = {
   name: string;
@@ -73,6 +74,9 @@ export default function Home() {
       {/* grid bg */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(to_right,#1a1a1a_1px,transparent_1px),linear-gradient(to_bottom,#1a1a1a_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_110%)] opacity-30" />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-zinc-900/20 via-transparent to-transparent" />
+
+      {/* INTERACTIVE TERMINAL — top */}
+      <Terminal />
 
       {/* NAV — arch style */}
       <nav className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#0a0a0a]/70 backdrop-blur-xl">
