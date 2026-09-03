@@ -12,24 +12,36 @@ type Project = {
 const projects: Project[] = [
   {
     name: "gilma",
-    tagline: "git-like memory access",
-    desc: "Ridiculously simple file sync that speaks Tamil but thinks in systems. Delta sync, hash-verified, built twice — once in Rust, once in raw C++.",
+    tagline: "git-like memory access — 4 variants",
+    desc: "Simple file sync that speaks Tamil but thinks in systems. Delta sync, hash-verified. Same idea, four implementations.",
     lang: ["Rust", "C++17"],
     color: "#ff4d4d",
-    status: "2 versions live",
+    status: "4 versions",
     features: ["vechuko / vangiko / kaami — tamil CLI", "delta sync + SHA-256 verify", "TCP sockets, zero frameworks"],
     links: [
+      { label: "gilma", href: "https://github.com/LokajithPT/gilma" },
+      { label: "gilmaclientside", href: "https://github.com/LokajithPT/gilmaclientside" },
       { label: "rustygilma", href: "https://github.com/LokajithPT/rustygilma" },
       { label: "gilmacpp", href: "https://github.com/LokajithPT/gilmacpp" },
     ],
   },
   {
+    name: "knot",
+    tagline: "tie it together",
+    desc: "New app in progress. Details coming soon — tying workflows together in one place.",
+    lang: ["App", "Soon"],
+    color: "#ffbd2e",
+    status: "coming soon",
+    features: ["in development", "details soon", "stay tuned"],
+    links: [{ label: "knot — soon", href: "https://github.com/LokajithPT" }],
+  },
+  {
     name: "lkey",
     tagline: "lowkey — programming should be a conversation",
-    desc: "An English-readable programming language. No semicolons screaming at you. Just `var name is \"Alice\"` and `say \"hello\"`. Lexer → Parser → Interpreter, all hand-rolled in C++.",
+    desc: "An English-readable programming language. `var name is \"Alice\"` and `say \"hello\"`. Lexer → Parser → Interpreter, all hand-rolled in C++.",
     lang: ["C++17", "CMake"],
     color: "#7c5cff",
-    status: "32 commits deep",
+    status: "32 commits",
     features: ["word-operators: plus / minus / into / div", "how to add with a, b so ... thats how", "classes, loops, questions"],
     links: [
       { label: "lkey", href: "https://github.com/LokajithPT/lkey" },
@@ -38,12 +50,12 @@ const projects: Project[] = [
   },
   {
     name: "leviathan",
-    tagline: "the toolbox that ate everything",
-    desc: "CLI + server + game + flutter experiments — one repo to rule them all. Python and C fighting for dominance. The name is bigger than the docs (there are none).",
+    tagline: "modular workspace",
+    desc: "CLI, server, game and mobile experiments — modular tools and prototypes in one workspace.",
     lang: ["Python", "C"],
     color: "#00d9a5",
-    status: "chaotic good",
-    features: ["cli.py + cli.c — bilingual CLI", "serv.py server core", "game / templates / windows explorations"],
+    status: "active",
+    features: ["cli.py + cli.c — CLI", "serv.py server core", "game / templates / windows"],
     links: [{ label: "leviathan", href: "https://github.com/LokajithPT/leviathan" }],
   },
 ];
@@ -86,7 +98,7 @@ export default function Home() {
       <header className="mx-auto w-full max-w-6xl px-6 pt-16 pb-10 sm:pt-24 sm:pb-16">
         <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs font-mono text-zinc-400 backdrop-blur">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          available for questionable decisions
+          building in public
         </div>
 
         <h1 className="mt-6 font-mono text-[2.2rem] font-black leading-[0.9] tracking-tighter sm:text-6xl md:text-7xl">
@@ -101,7 +113,7 @@ export default function Home() {
           <span className="text-zinc-500">.</span>
         </p>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-[15px]">
-          builder · rust / c++ / python · i make file-sync that speaks tamil, a language that speaks english, and a toolbox called leviathan. based somewhere between <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono text-zinc-300">git push</code> and <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono text-zinc-300">oops</code>.
+          builder · rust / c++ / python · file-sync that speaks tamil, a language that reads like english, and a modular workspace called leviathan.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
@@ -109,7 +121,7 @@ export default function Home() {
             href="#projects"
             className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
           >
-            see the chaos ↓
+            view projects ↓
           </a>
           <a
             href="https://github.com/LokajithPT?tab=repositories"
@@ -136,11 +148,11 @@ export default function Home() {
       {/* PROJECTS */}
       <section id="projects" className="mx-auto w-full max-w-6xl px-6 pb-12">
         <div className="mb-6 flex items-baseline justify-between">
-          <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">projects — the main characters</h2>
-          <span className="hidden font-mono text-xs text-zinc-600 sm:inline">* some may contain tamil, english, and hubris</span>
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">projects</h2>
+          <span className="hidden font-mono text-xs text-zinc-600 sm:inline">tamil CLI · english syntax · built from scratch</span>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {projects.map((p) => (
             <article
               key={p.name}
@@ -195,15 +207,11 @@ export default function Home() {
 
         {/* extra repos strip */}
         <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 p-5">
-          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">also lurking on github</p>
+          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">more on github</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {[
-              ["bexo", "digital portfolio platform", "https://github.com/LokajithPT/bexo"],
-              ["plum", "PLM + FreeCAD 3D viewer", "https://github.com/LokajithPT/plum"],
-              ["rustybun", "private — cooking", "https://github.com/LokajithPT/rustybun"],
+              ["rustybun", "private — in progress", "https://github.com/LokajithPT/rustybun"],
               ["mytutor", "tutor platform", "https://github.com/LokajithPT/mytutor"],
-              ["goldmine", "public", "https://github.com/LokajithPT/goldmine"],
-              ["dots", "dotfiles", "https://github.com/LokajithPT/dots"],
             ].map(([name, desc, href]) => (
               <a
                 key={name}
@@ -229,18 +237,18 @@ export default function Home() {
               i build tools i want to use. if they speak tamil or english, even better.
             </p>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
-              no heavy frameworks. just sockets, parsers, and questionable life choices that somehow compile. gilma taught me sync is hard. lkey taught me language design is harder. leviathan taught me to just ship it.
+              no heavy frameworks. just sockets, parsers, and focused iteration. gilma taught me sync is hard. lkey taught me language design is harder. leviathan taught me to ship consistently.
             </p>
             <div className="mt-5 flex flex-wrap gap-2 font-mono text-xs">
               <span className="rounded-full bg-black px-3 py-1 text-white">ships fast</span>
-              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">breaks things</span>
-              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">fixes at 2am</span>
+              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">iterates fast</span>
+              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">ships often</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-6 md:col-span-2">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-              <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">stack & weapons</p>
+              <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">stack</p>
               <div className="mt-4 grid grid-cols-2 gap-2 font-mono text-xs">
                 {["Rust", "C++17", "Python", "Next.js / React", "TCP Sockets", "CMake / Cargo", "Tailwind", "Git / GH Actions"].map((s) => (
                   <span key={s} className="rounded-lg border border-zinc-800 bg-black px-3 py-2 text-zinc-300">
@@ -253,7 +261,7 @@ export default function Home() {
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
               <p className="font-mono text-xs font-semibold uppercase tracking-widest text-zinc-500">currently</p>
               <p className="mt-3 font-mono text-sm leading-6 text-zinc-300">
-                polishing gilma & lkey · cooking rustybun · open to collabs that involve parsers, sync, or beautiful chaos
+                polishing gilma & lkey · building knot · open to collabs on parsers, sync, and systems work
               </p>
               <a
                 href="https://github.com/LokajithPT"
@@ -261,7 +269,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-zinc-200"
               >
-                follow the chaos on github →
+                view on github →
               </a>
             </div>
           </div>
@@ -272,9 +280,9 @@ export default function Home() {
       <footer className="mt-auto border-t border-zinc-800 bg-black">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="font-mono text-xs leading-5 text-zinc-500">
-            <span className="font-semibold text-zinc-300">LokajithPT</span> © {new Date().getFullYear()} · made with next.js, tailwind, and sleep deprivation.
+            <span className="font-semibold text-zinc-300">LokajithPT</span> © {new Date().getFullYear()} · built with next.js & tailwind.
             <br />
-            <span className="text-zinc-600">tip: `vechuko` means push. you&apos;re welcome.</span>
+            <span className="text-zinc-600">tip: `vechuko` means push.</span>
           </div>
           <div className="flex gap-3 font-mono text-xs">
             <a href="https://github.com/LokajithPT" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white">
