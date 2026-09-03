@@ -4,8 +4,21 @@ import { useEffect, useRef, useState } from "react";
 type Entry = { type: "in" | "out"; text: string };
 type FSEntry = { type: "dir" | "file"; content?: string; owner?: string; perms?: string };
 
-const USER_FLAG = "flag{user_cool_nerd_lokajith_7f3a9e2c}";
-const ROOT_FLAG = "flag{root_vibe_coded_arch_masta_9b2c1f8a}";
+const USER_ENC = "VmpJd2VFNUhSa2RpTTNCclVrVmFjVlJYZUdGT1ZtUkZVMnM1YTJKVmJEVmFWV1JoWVZkS1YxZHFWbGhoTVdzeFdYcEtTbVZYVWtoaFIyaHBWak5rTTFkV1ZscE9SVEI0WTBoR1ZXSlhhRkZXYWtaWFRsWmtWVlJZWkZGVlZEQTU=";
+const ROOT_ENC = "VmpJd2VFNUhSa2RpTTNCclUwZDRjRlJYY0hKa01XUkZWRzFHYWxKdGVEQldiVEZoVjJzeGNXSklTbGhpUjFKVVYyMTRjMWRXVG5SalIyaFRZVzEzZDFZeFdtOVVNREZIWWtaa1VGSkdXbUZaVjNSM1kxWlNWMXBHY0U5U2JYaGFWRlZSZDFCUlBUMD0=";
+function d5(s: string): string {
+  let o = s;
+  for (let i = 0; i < 5; i++) {
+    try {
+      o = (globalThis as any).atob ? (globalThis as any).atob(o) : Buffer.from(o, "base64").toString("utf-8");
+    } catch {
+      o = Buffer.from(o, "base64").toString("utf-8");
+    }
+  }
+  return o;
+}
+const USER_FLAG = d5(USER_ENC);
+const ROOT_FLAG = d5(ROOT_ENC);
 
 const initialFS: Record<string, FSEntry> = {
   "/": { type: "dir" },
